@@ -16,7 +16,7 @@ import { useState } from 'react'
 export default function Home() {
   const [text, setText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [showImage, setShowImage] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
   const toast = useToast()
 
   const handleSubmit = async () => {
@@ -31,11 +31,35 @@ export default function Home() {
     }
 
     setIsLoading(true)
+    setImageUrl('')
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: text }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate image')
+      }
+
+      const data = await response.json()
+      setImageUrl(data.imageUrl)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to generate image. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      console.error('Error:', error)
+    } finally {
       setIsLoading(false)
-      setShowImage(true)
-    }, 2000)
+    }
   }
 
   return (
@@ -65,7 +89,7 @@ export default function Home() {
             bg: '#6d1566',
           }}
           size="lg"
-          disabled={!text.trim()}
+          disabled={!text.trim() || isLoading}
         >
           Generate image
         </Button>
@@ -76,10 +100,10 @@ export default function Home() {
           </Box>
         )}
 
-        {showImage && !isLoading && (
+        {imageUrl && !isLoading && (
           <Box pt={4}>
             <Image
-              src="/huangshan.png"
+              src={imageUrl}
               alt="Generated image"
               borderRadius="md"
               w="full"
