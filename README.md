@@ -1,6 +1,6 @@
-# Genji
+# Farfalla
 
-A Next.js Web3 app template.
+Text-to-Image app.
 
 ## Install
 
