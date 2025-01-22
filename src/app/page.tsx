@@ -1,126 +1,93 @@
 'use client'
 
-import { Container, Text, useToast, Button, Tooltip } from '@chakra-ui/react'
-import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react'
-import { BrowserProvider, parseEther, formatEther } from 'ethers'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import {
+  Container,
+  Text,
+  Button,
+  Textarea,
+  VStack,
+  Image,
+  useToast,
+  Box,
+  Spinner,
+} from '@chakra-ui/react'
+import { useState } from 'react'
 
 export default function Home() {
+  const [text, setText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [txLink, setTxLink] = useState<string>()
-  const [txHash, setTxHash] = useState<string>()
-  const [balance, setBalance] = useState<string>('0')
-
-  const { address, isConnected } = useAppKitAccount()
-  const { walletProvider } = useAppKitProvider('eip155')
+  const [showImage, setShowImage] = useState(false)
   const toast = useToast()
 
-  useEffect(() => {
-    const checkBalance = async () => {
-      if (address && walletProvider) {
-        try {
-          const provider = new BrowserProvider(walletProvider as any)
-          const balance = await provider.getBalance(address)
-          setBalance(formatEther(balance))
-        } catch (error) {
-          console.error('Error fetching balance:', error)
-        }
-      }
-    }
-
-    checkBalance()
-  }, [address, walletProvider])
-
-  const handleSend = async () => {
-    setTxHash('')
-    setTxLink('')
-    if (!address || !walletProvider) {
+  const handleSubmit = async () => {
+    if (!text.trim()) {
       toast({
-        title: 'Not connected',
-        description: 'Please connect your wallet',
-        status: 'error',
-        duration: 5000,
+        title: 'Please enter some text',
+        status: 'warning',
+        duration: 3000,
         isClosable: true,
       })
       return
     }
 
     setIsLoading(true)
-    try {
-      const provider = new BrowserProvider(walletProvider as any)
-      const signer = await provider.getSigner()
 
-      const tx = await signer.sendTransaction({
-        to: address,
-        value: parseEther('0.0001'),
-      })
-
-      const receipt = await tx.wait(1)
-
-      setTxHash(receipt?.hash)
-      setTxLink('https://sepolia.etherscan.io/tx/' + receipt?.hash)
-
-      toast({
-        title: 'Transaction successful',
-        description: `Sent 0.0001 ETH to ${address}`,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
-    } catch (error) {
-      console.error('Transaction failed:', error)
-      toast({
-        title: 'Transaction failed',
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      setShowImage(true)
+    }, 2000)
   }
-
-  const hasEnoughBalance = Number(balance) >= 0.0001
 
   return (
     <Container maxW="container.sm" py={20}>
-      <Text mb={4}>Hello world!</Text>
-      {isConnected && (
-        <Tooltip
-          label={!hasEnoughBalance ? 'Please connect with an account that has a bit of ETH' : ''}
-          isDisabled={hasEnoughBalance}
-          hasArrow
-          bg="black"
+      <VStack spacing={6} align="stretch">
+        <Textarea
+          placeholder="Beautiful chinese mountains"
+          value={text}
+          onChange={e => setText(e.target.value)}
+          size="lg"
+          height="200px"
+          fontSize="xl"
+          padding="6"
+          bg="whiteAlpha.100"
+          _hover={{ bg: 'whiteAlpha.200' }}
+          _focus={{ bg: 'whiteAlpha.200' }}
+          resize="vertical"
+        />
+
+        <Button
+          onClick={handleSubmit}
+          isLoading={isLoading}
+          loadingText="Generating image..."
+          bg="#8c1c84"
           color="white"
-          borderWidth="1px"
-          borderColor="red.500"
-          borderRadius="md"
-          p={2}
+          _hover={{
+            bg: '#6d1566',
+          }}
+          size="lg"
+          disabled={!text.trim()}
         >
-          <Button
-            onClick={handleSend}
-            isLoading={isLoading}
-            loadingText="Sending..."
-            bg="#45a2f8"
-            color="white"
-            _hover={{
-              bg: '#3182ce',
-            }}
-            isDisabled={!hasEnoughBalance}
-          >
-            Send 0.0001 ETH to self
-          </Button>
-        </Tooltip>
-      )}
-      {txHash && isConnected && (
-        <Text py={4} fontSize="14px" color="#45a2f8">
-          <Link target="_blank" rel="noopener noreferrer" href={txLink ? txLink : ''}>
-            {txHash}
-          </Link>
-        </Text>
-      )}
+          Generate image
+        </Button>
+
+        {isLoading && (
+          <Box textAlign="center" py={8}>
+            <Spinner size="md" color="#8c1c84" />
+          </Box>
+        )}
+
+        {showImage && !isLoading && (
+          <Box pt={4}>
+            <Image
+              src="/huangshan.png"
+              alt="Generated image"
+              borderRadius="md"
+              w="full"
+              fallback={<Text>Failed to load image</Text>}
+            />
+          </Box>
+        )}
+      </VStack>
     </Container>
   )
 }
