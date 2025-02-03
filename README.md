@@ -16,7 +16,17 @@ Create a `.env` file:
 cp .env.example .env
 ```
 
-Add your own keys in the `.env` file (you can get it in your [Reown dashboard](https://cloud.reown.com/)), then:
+Add your own keys in the `.env` file:
+
+- [Reown](https://cloud.reown.com/) (formerly _Web3 Modal_ by [Wallet Connect](https://walletconnect.network/))
+- [fal](https://fal.ai/) ([docs](https://docs.fal.ai/quick-start))
+
+```
+NEXT_PUBLIC_PROJECT_ID=
+FAL_KEY=
+```
+
+Then:
 
 ```bash
 pnpm dev
